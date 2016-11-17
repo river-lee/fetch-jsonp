@@ -21,7 +21,9 @@ function clearGlobalObject(objectName) {
 
 function removeScript(scriptId) {
   const script = document.getElementById(scriptId);
-  document.getElementsByTagName("head")[0].removeChild(script);
+  if(script){
+    document.getElementsByTagName("head")[0].removeChild(script);
+  }
 }
 
 const fetchJsonp = function(url, options = {}) {
@@ -65,8 +67,8 @@ const fetchJsonp = function(url, options = {}) {
     jsonpScript.id = jsonpCallback + '_' + callbackFunction;
 
     // Attach handlers for all browsers
-    jsonpScript.onload = jsonpScript.onreadystatechange = function(err) {
-      var hasError = false;
+    jsonpScript.onload = jsonpScript.onreadystatechange = function(event) {
+      let hasError = false;
       //IE8 Unable to determine the load failed.
       //But the execution is faster than the this.readyState change.
       //Request to complete the callback will be deleted, if there is a callback, that is, the request failed
@@ -77,16 +79,22 @@ const fetchJsonp = function(url, options = {}) {
         hasError = !!window[callbackFunction];
       }
 
-      if (hasError || err) {
+      if (hasError) {
         reject(new Error(`JSONP request to ${url} request failed`));
         claer();
       }
     }
 
+    jsonpScript.onerror = function(event){
+      reject(new Error(`JSONP request to ${url} request failed`));
+      claer();
+    }
+
+
     if (timeout > 0) {
       //Generate different “timeoutid”
       //That is not because of the asynchronous lead, the entire "timeout" chaos
-      window[timeoutid] = setTimeout(() => {
+      window[timeoutId] = setTimeout(() => {
         reject(new Error(`JSONP request to ${url} timed out`));
         claer();
       }, timeout);
